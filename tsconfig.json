@@ -1,0 +1,17 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    // 覆盖 dom 预设的 ["ES2020", "DOM", "DOM.Iterable"]，维持原有目标
+    "lib": ["esnext", "dom"],
+    // dom 预设里 types 置空，需显式声明 uni-app 全局类型
+    "types": ["@dcloudio/types", "uview-plus/types"],
+    // TS 5 起用该选项替代已删除的 preserveValueImports/importsNotUsedAsValues
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
+}

@@ -1,0 +1,111 @@
+{
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^u--(.*)": "uview-plus/components/u-$1/u-$1.vue",
+			"^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+			"^u-([a-z0-9-]+)$": "uview-plus/components/u-$1/u-$1.vue"
+		}
+	},
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "首页"
+			}
+		},
+		{
+			"path": "pages/tab2/index",
+			"style": {
+				"navigationBarTitleText": "分类"
+			}
+		},
+		{
+			"path": "pages/tab3/index",
+			"style": {
+				"navigationBarTitleText": "发现"
+			}
+		},
+		{
+			"path": "pages/mine/index",
+			"style": {
+				"navigationBarTitleText": "我的"
+			}
+		}
+	],
+	"subPackages": [
+		{
+			"root": "subpkg-auth",
+			"pages": [
+				{
+					"path": "pages/login/index",
+					"style": {
+						"navigationBarTitleText": "登录"
+					}
+				},
+				{
+					"path": "pages/agreement/index",
+					"style": {
+						"navigationBarTitleText": "用户协议"
+					}
+				}
+			]
+		},
+		{
+			"root": "subpkg-common",
+			"pages": [
+				{
+					"path": "pages/validate/index",
+					"style": {
+						"navigationBarTitleText": "表单验证演示"
+					}
+				}
+			]
+		}
+	],
+	"preloadRule": {
+		"pages/mine/index": {
+			"network": "all",
+			"packages": ["subpkg-auth"]
+		}
+	},
+	"tabBar": {
+		"color": "#909399",
+		"selectedColor": "#2979ff",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tab/home.png",
+				"selectedIconPath": "static/tab/home-active.png"
+			},
+			{
+				"pagePath": "pages/tab2/index",
+				"text": "分类",
+				"iconPath": "static/tab/cate.png",
+				"selectedIconPath": "static/tab/cate-active.png"
+			},
+			{
+				"pagePath": "pages/tab3/index",
+				"text": "发现",
+				"iconPath": "static/tab/find.png",
+				"selectedIconPath": "static/tab/find-active.png"
+			},
+			{
+				"pagePath": "pages/mine/index",
+				"text": "我的",
+				"iconPath": "static/tab/mine.png",
+				"selectedIconPath": "static/tab/mine-active.png"
+			}
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	}
+}
