@@ -59,6 +59,7 @@
     "@dcloudio/uni-quickapp-webview": "3.0.0-5020420260813002",
     "clipboard": "^2.0.11",
     "dayjs": "^1.11.22",
+    "pinia": "2.1.7",
     "uview-plus": "^3.8.86",
     "vue": "^3.4.21",
     "vue-i18n": "^11.4.8"

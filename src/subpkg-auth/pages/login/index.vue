@@ -48,7 +48,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { wxMobileLogin, type WxMobileLoginParams } from '@/api/user'
+import { useUserStore } from '@/stores/user'
 
 /** 微信 getPhoneNumber 回调事件结构（新版返回动态令牌 code） */
 interface GetPhoneNumberEvent {
@@ -58,9 +60,18 @@ interface GetPhoneNumberEvent {
   }
 }
 
+const userStore = useUserStore()
 const agreed = ref(false)
 const loading = ref(false)
 const skipStyle = { marginTop: '24rpx' }
+/** 登录拦截携带的原页面地址（navigateToNeedLogin 传入），登录后回跳 */
+let redirectUrl = ''
+
+onLoad((query) => {
+  if (query?.redirect) {
+    redirectUrl = decodeURIComponent(query.redirect)
+  }
+})
 
 const toggleAgreed = () => {
   agreed.value = !agreed.value
@@ -75,15 +86,21 @@ const ensureAgreed = (): boolean => {
   return true
 }
 
-/** 换取登录态并落地缓存 */
+/** 换取登录态并落地缓存（经 user store，storage 由 store 持久化） */
 const doLogin = async (params: WxMobileLoginParams) => {
   loading.value = true
   try {
     const result = await wxMobileLogin(params)
-    uni.setStorageSync('token', result.token)
-    uni.setStorageSync('phone', result.phone)
+    userStore.setLoginInfo(result.token, result.phone)
     uni.showToast({ title: '登录成功', icon: 'success' })
-    setTimeout(() => uni.navigateBack({ fail: () => uni.switchTab({ url: '/pages/mine/index' }) }), 800)
+    setTimeout(() => {
+      // 有拦截来源则回跳原页面，否则返回上一页
+      if (redirectUrl) {
+        uni.redirectTo({ url: redirectUrl, fail: () => uni.switchTab({ url: '/pages/mine/index' }) })
+      } else {
+        uni.navigateBack({ fail: () => uni.switchTab({ url: '/pages/mine/index' }) })
+      }
+    }, 800)
   } catch {
     // 错误已由 request.ts 统一 toast，这里无需重复处理
   } finally {

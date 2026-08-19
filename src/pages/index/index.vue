@@ -87,8 +87,11 @@ const entrances = ref<Entrance[]>([
   { name: '领券中心', icon: 'coupon' },
   { name: '会员中心', icon: 'level' },
   { name: '客服咨询', icon: 'server-man' },
-  { name: '更多', icon: 'list' },
+  { name: 'AI 小昭', icon: 'chat' },
 ])
+
+/** AI 小昭聊天页路径（subpkg-ai 分包） */
+const AI_CHAT_PAGE = '/subpkg-ai/pages/chat/index'
 
 const goodsList = ref<Goods[]>([
   { id: 1, name: 'ttt1', price: '59.00', tag: '热卖', color: '#d3e9ff' },
@@ -105,6 +108,10 @@ const onSearch = (keyword: string) => {
 }
 
 const onEntrance = (item: Entrance) => {
+  if (item.name === 'AI 小昭') {
+    uni.navigateTo({ url: AI_CHAT_PAGE })
+    return
+  }
   uni.showToast({ title: `「${item.name}」开发中`, icon: 'none' })
 }
 </script>

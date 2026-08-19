@@ -60,6 +60,23 @@
 					"style": {
 						"navigationBarTitleText": "表单验证演示"
 					}
+				},
+				{
+					"path": "pages/profile-edit/index",
+					"style": {
+						"navigationBarTitleText": "编辑资料"
+					}
+				}
+			]
+		},
+		{
+			"root": "subpkg-ai",
+			"pages": [
+				{
+					"path": "pages/chat/index",
+					"style": {
+						"navigationBarTitleText": "AI 小昭"
+					}
 				}
 			]
 		}
@@ -68,6 +85,10 @@
 		"pages/mine/index": {
 			"network": "all",
 			"packages": ["subpkg-auth"]
+		},
+		"pages/index/index": {
+			"network": "all",
+			"packages": ["subpkg-ai"]
 		}
 	},
 	"tabBar": {

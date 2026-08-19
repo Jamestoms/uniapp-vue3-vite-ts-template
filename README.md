@@ -9,6 +9,7 @@
 | 框架 | uni-app（Vue 3.4+，Composition API + `<script setup>`） |
 | 语言 | TypeScript 5.9（vue-tsc 2.x 类型检查） |
 | UI 组件库 | uview-plus 3.x（组件前缀 `up-`） |
+| 状态管理 | Pinia（登录态等全局状态） |
 | 请求 | 基于 `uni.request` 自封装（拦截器 + 统一错误处理） |
 | 日期处理 | dayjs |
 | 构建 | Vite 5（@dcloudio/vite-plugin-uni） |
@@ -19,6 +20,10 @@
 - Node.js ≥ 18
 - pnpm ≥ 8（**请勿使用 npm / yarn 安装依赖**）
 - 微信开发者小程序工具（运行小程序产物）
+
+> **pinia 锁定 2.1.7**（与 uni-app 内置版本对齐）：pinia 3/4 的构建产物与 uni 编译链不兼容（如 4.x 的
+> `nostics` 依赖无法解析）。用法遵循 [uni-app 官方文档](https://uniapp.dcloud.net.cn/tutorial/vue3-pinia.html)：
+> main.ts 必须 `return { app, Pinia }`（将 Pinia 一并返回），否则小程序多实例间无法共享状态。
 
 ## 快速开始
 
@@ -81,6 +86,8 @@ const envConfigMap: Record<EnvType, EnvConfig> = {
 │   │   └── user.ts             #   用户模块（登录/信息修改/头像上传）
 │   ├── config/
 │   │   └── index.ts            # 环境配置（请求前缀、超时）
+│   ├── stores/                 # Pinia 全局状态
+│   │   └── user.ts             #   用户登录态（token/手机号/用户信息）
 │   ├── pages/                  # 主包页面（仅 tabBar 页面）
 │   │   ├── index/              #   首页（自定义导航栏）
 │   │   ├── tab2/               #   分类（占位）
@@ -92,6 +99,9 @@ const envConfigMap: Record<EnvType, EnvConfig> = {
 │   ├── utils/
 │   │   ├── request.ts          # 请求封装（拦截器 + 统一错误处理）
 │   │   ├── validate.js         # 表单验证规则库（+ validate.d.ts）
+│   │   ├── storage.ts          # 本地存储封装（typed + Key 统一管理）
+│   │   ├── router.ts           # 跳转封装（需登录页面拦截）
+│   │   ├── wechat.ts           # 微信能力（支付/订阅消息）
 │   │   └── ...
 │   ├── App.vue                 # 应用入口（引入 uview-plus 全局样式）
 │   ├── main.ts                 # 应用启动（注册 uview-plus）
@@ -102,6 +112,62 @@ const envConfigMap: Record<EnvType, EnvConfig> = {
 ```
 
 ## 公用模块
+
+### 状态管理（Pinia）
+
+全局状态定义在 `src/stores/`，已在 `main.ts` 按官方写法注册（`import * as Pinia from "pinia"` 并将
+`Pinia` 随 `createApp` 返回，这是 uni-app 的硬性要求）。**登录态唯一数据源为 user store**，页面禁止直接读写 token/phone 的 storage：
+
+```ts
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores/user";
+
+const userStore = useUserStore();
+const { isLoggedIn, maskedPhone } = storeToRefs(userStore); // 响应式取值
+
+userStore.setLoginInfo(token, phone); // 登录写入（自动持久化 storage）
+userStore.clearLogin();                // 退出/失效清除
+```
+
+新增全局状态（购物车、预订草稿等）时在 `stores/` 下新建模块。
+
+### 微信能力封装（`@/utils/wechat`）
+
+支付参数由后端统一下单接口返回，前端不拼接签名：
+
+```ts
+import { wxPay, wxSubscribeMessage, type WxPayParams } from "@/utils/wechat";
+
+try {
+  await wxPay(payParams);              // 调起微信支付（仅小程序端）
+} catch (e) {
+  // "已取消支付" / "支付失败，请重试"
+}
+
+// 订阅消息（赛事预约提醒等，需用户手势触发，模板 id 在公众平台申请）
+const accepted = await wxSubscribeMessage(["TMPL_ID_XXX"]);
+```
+
+### 本地存储（`@/utils/storage`）
+
+```ts
+import { getStorage, setStorage, removeStorage, StorageKey } from "@/utils/storage";
+
+setStorage(StorageKey.USER_INFO, info);          // 写入
+const info = getStorage<UserInfo>(StorageKey.USER_INFO, null); // 读取（带类型与默认值）
+```
+
+新增 Key 在 `StorageKey` 中登记，不要散落魔法字符串。
+
+### 需登录页面跳转（`@/utils/router`）
+
+uni-app 无路由守卫，需登录的页面用封装跳转（未登录自动提示并转登录页，登录后回跳）：
+
+```ts
+import { navigateToNeedLogin } from "@/utils/router";
+
+navigateToNeedLogin("/subpkg-mall/pages/order/detail?id=1");
+```
 
 ### 请求封装（`@/utils/request`）
 
@@ -122,7 +188,7 @@ await http.post("/order/submit", payload, { loading: true, showError: false });
 
 行为约定：
 
-- **请求拦截**：本地存有 `token` 时自动注入 `Authorization: Bearer <token>`
+- **请求拦截**：自动从 user store 读取 token 并注入 `Authorization: Bearer <token>`
 - **响应约定**：后端返回 `{ code, message, data }`，`code === 0` 视为成功，其余统一 toast `message` 并 reject；字段约定与成功码在 `request.ts` 顶部按后端实际调整
 - **错误分类**：HTTP 状态码错误（400/401/404/500 等有中文文案）、业务码错误、网络异常（断网/超时）三类，统一 reject `RequestError { statusCode, code, message }`，页面 catch 后只需写业务逻辑
 - **401 处理**：自动清除登录态并 `reLaunch` 到登录页
@@ -227,6 +293,7 @@ const list = await getOrderList({ page: 1, size: 10 });
 - `src/subpkg-auth/`：登录相关（登录页、用户协议页）
 - `src/subpkg-common/`：通用分包（表单演示页等低频页面）
 - 新增页面：一律放分包（按业务新建 `subpkg-xxx`），并在 `pages.json` 的 `subPackages` 注册；进入高频入口页时可在 `preloadRule` 配置分包预下载
+- 静态资源：分包内用到的静态资源放在分包目录下通过相对路径引用，禁止把静态资源全都放在主目录下
 
 跳转分包页面使用绝对路径：
 

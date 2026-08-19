@@ -1,16 +1,29 @@
 <template>
   <view class="page">
+    <!-- 用户卡：点击头像/昵称/手机号区域 —— 未登录去登录，已登录去编辑资料 -->
     <view class="user-card" @click="onUserCardClick">
       <up-avatar
+        v-if="isLoggedIn && userInfo?.avatar"
+        :src="userInfo.avatar"
+        :size="72"
+        shape="circle"
+        mode="aspectFill"
+      ></up-avatar>
+      <up-avatar
+        v-else
         :text="isLoggedIn ? maskedPhone.slice(0, 1) : '未'"
         :size="72"
-        bgColor="#2979ff"
+        shape="circle"
+        bgColor="#ffffff"
+        color="#2979ff"
       ></up-avatar>
       <view class="user-info">
-        <text class="user-name">{{ isLoggedIn ? maskedPhone : '未登录' }}</text>
-        <text class="user-tip">{{ isLoggedIn ? '欢迎使用小程序' : '点击登录，享受更多服务' }}</text>
+        <view class="user-name-row">
+          <text class="user-name">{{ isLoggedIn ? (userInfo?.nickname || maskedPhone) : '未登录' }}</text>
+          <up-icon name="arrow-right" color="#ffffff" size="16"></up-icon>
+        </view>
+        <text class="user-tip">{{ isLoggedIn ? maskedPhone : '点击登录，享受更多服务' }}</text>
       </view>
-      <up-icon v-if="!isLoggedIn" name="arrow-right" color="#ffffff" size="16"></up-icon>
     </view>
 
     <view class="stats-bar">
@@ -47,30 +60,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { onShow } from '@dcloudio/uni-app'
+import { getUserInfo } from '@/api/user'
+import { useUserStore } from '@/stores/user'
+import { navigateToNeedLogin } from '@/utils/router'
 
-const phone = ref('')
-
-/** 登录态：以本地 token 为准 */
-const isLoggedIn = computed(() => Boolean(uni.getStorageSync('token')))
-
-/** 手机号脱敏展示：138****1234 */
-const maskedPhone = computed(() => {
-  if (!phone.value) return '已登录用户'
-  return phone.value.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2')
-})
-
-onShow(() => {
-  // 每次进入页面刷新缓存中的手机号（登录页写入）
-  phone.value = String(uni.getStorageSync('phone') ?? '')
-})
+const userStore = useUserStore()
+const { isLoggedIn, maskedPhone, userInfo } = storeToRefs(userStore)
 
 const onUserCardClick = () => {
   if (!isLoggedIn.value) {
     uni.navigateTo({ url: '/subpkg-auth/pages/login/index' })
+    return
   }
+  navigateToNeedLogin('/subpkg-common/pages/profile-edit/index')
 }
+
+onShow(() => {
+  // 已登录但无用户信息缓存时拉取（静默，失败不打扰；编辑页提交后会刷新 store）
+  if (isLoggedIn.value && !userInfo.value) {
+    getUserInfo({ showError: false })
+      .then((info) => userStore.setUserInfo(info))
+      .catch(() => {})
+  }
+})
 
 const onMenu = (name: string) => {
   if (!isLoggedIn.value) {
@@ -86,9 +100,7 @@ const logout = () => {
     content: '确定退出登录吗？',
     success: (res) => {
       if (res.confirm) {
-        uni.removeStorageSync('token')
-        uni.removeStorageSync('phone')
-        phone.value = ''
+        userStore.clearLogin()
         uni.showToast({ title: '已退出登录', icon: 'none' })
       }
     },
@@ -117,7 +129,13 @@ const logoutStyle = { marginTop: '48rpx' }
   flex-direction: column;
   margin-left: 24rpx;
 
+  .user-name-row {
+    display: flex;
+    align-items: center;
+  }
+
   .user-name {
+    margin-right: 8rpx;
     font-size: 34rpx;
     font-weight: 600;
     color: #ffffff;

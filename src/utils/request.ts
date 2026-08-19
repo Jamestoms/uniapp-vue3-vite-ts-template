@@ -13,6 +13,8 @@
  *   await http.post("/login", { username, password }, { loading: true });
  */
 import { envConfig } from "@/config";
+import { useUserStore } from "@/stores/user";
+import { LOGIN_PAGE } from "@/utils/router";
 
 /** 后端统一响应结构（按实际后端约定调整字段名） */
 export interface ApiResponse<T = unknown> {
@@ -73,10 +75,10 @@ export function useResponseInterceptor(fn: ResponseInterceptor) {
   responseInterceptors.push(fn);
 }
 
-/** 内置请求拦截：注入登录态请求头 */
+/** 内置请求拦截：注入登录态请求头（token 唯一来源为 user store） */
 function defaultRequestInterceptor(options: RequestOptions): RequestOptions {
   const header: Record<string, string> = { ...options.header };
-  const token = uni.getStorageSync("token");
+  const token = useUserStore().token;
   if (token) {
     header.Authorization = `Bearer ${token}`;
   }
@@ -118,11 +120,10 @@ function createError(message: string, statusCode: number, code?: number): Reques
   return error;
 }
 
-/** 401 统一处理：清除登录态并跳转分包登录页 */
+/** 401 统一处理：清除登录态（经 user store 同步 storage）并跳转分包登录页 */
 function handleUnauthorized() {
-  uni.removeStorageSync("token");
-  uni.removeStorageSync("phone");
-  uni.reLaunch({ url: "/subpkg-auth/pages/login/index" });
+  useUserStore().clearLogin();
+  uni.reLaunch({ url: LOGIN_PAGE });
 }
 
 /** 核心请求方法 */

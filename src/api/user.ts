@@ -3,7 +3,7 @@
  *
  * 路径为约定占位，接入真实后端时按实际接口文档调整。
  */
-import { http } from "@/utils/request";
+import { http, type RequestOptions } from "@/utils/request";
 
 /* ============================== 类型定义 ============================== */
 
@@ -36,6 +36,7 @@ export interface UpdateUserParams {
   nickname?: string;
   avatar?: string;
   gender?: 0 | 1 | 2;
+  phone?: string;
 }
 
 /** 对象存储预签名上传凭证（后端签发，前端直传） */
@@ -61,9 +62,11 @@ export function wxMobileLogin(params: WxMobileLoginParams) {
 /**
  * 获取当前登录用户信息
  * GET /user/info
+ *
+ * @param options 请求选项透传（如页面静默拉取时传 { showError: false }）
  */
-export function getUserInfo() {
-  return http.get<UserInfo>("/user/info");
+export function getUserInfo(options?: Partial<RequestOptions>) {
+  return http.get<UserInfo>("/user/info", undefined, options);
 }
 
 /**
