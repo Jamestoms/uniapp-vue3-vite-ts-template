@@ -1,4 +1,4 @@
-# my-vue3-project
+# uniapp-vue3-vite-ts-template
 
 基于 uni-app + Vue 3 + TypeScript 的微信小程序项目，多端编译支持（当前以微信小程序为主，兼容 H5），开箱即用，省去你搭建基础框架的时间，直接投入开发
 
