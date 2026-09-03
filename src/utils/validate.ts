@@ -21,51 +21,51 @@
  * （up-form 中非 required 且为空时不会触发 validator）。
  */
 
+/** async-validator 风格的 validator：通过 callback() 放行，callback(new Error(msg)) 报错 */
+export type UpValidator = (
+  rule: unknown,
+  value: unknown,
+  callback: (error?: Error) => void
+) => void;
+
+/** 断言函数：入参任意，返回 boolean */
+export type AssertFn = (value: unknown) => boolean;
+
 /* ============================== 基础断言函数 ============================== */
 
 /**
  * 中文姓名：2-20 位中文，支持少数民族姓名中的间隔符 ·（如 买买提·艾力）
- * @param {string} value
- * @returns {boolean}
  */
-export function isChineseName(value) {
+export function isChineseName(value: unknown): boolean {
   return /^[\u4e00-\u9fa5][\u4e00-\u9fa5·]{1,19}$/.test(String(value ?? '').trim());
 }
 
 /**
  * 手机号：国内 11 位，1 开头第二位 3-9
- * @param {string} value
- * @returns {boolean}
  */
-export function isMobile(value) {
+export function isMobile(value: unknown): boolean {
   return /^1[3-9]\d{9}$/.test(String(value ?? '').trim());
 }
 
 /**
  * 座机电话：可选区号（3-4 位）+ 7-8 位号码 + 可选分机号
  * 如 010-12345678、057112345678、021-12345678-1234
- * @param {string} value
- * @returns {boolean}
  */
-export function isTelPhone(value) {
+export function isTelPhone(value: unknown): boolean {
   return /^(0\d{2,3}-?)?\d{7,8}(-\d{1,5})?$/.test(String(value ?? '').trim());
 }
 
 /**
  * 座机号或手机号
- * @param {string} value
- * @returns {boolean}
  */
-export function isPhone(value) {
+export function isPhone(value: unknown): boolean {
   return isMobile(value) || isTelPhone(value);
 }
 
 /**
  * 身份证号：支持 15 位（旧）与 18 位（新，含出生日期与校验码验证）
- * @param {string} value
- * @returns {boolean}
  */
-export function isIdCard(value) {
+export function isIdCard(value: unknown): boolean {
   const id = String(value ?? '').trim().toUpperCase();
 
   // 15 位旧身份证：6 位地址码 + 出生年月日（yyMMdd，视为 19xx）+ 3 位顺序码
@@ -87,29 +87,23 @@ export function isIdCard(value) {
 
 /**
  * 整数（支持负号），如 0、-12、100
- * @param {string|number} value
- * @returns {boolean}
  */
-export function isInteger(value) {
+export function isInteger(value: unknown): boolean {
   return /^-?\d+$/.test(String(value ?? '').trim());
 }
 
 /**
  * 正整数（大于 0，不含 0）
- * @param {string|number} value
- * @returns {boolean}
  */
-export function isPositiveInteger(value) {
+export function isPositiveInteger(value: unknown): boolean {
   return /^[1-9]\d*$/.test(String(value ?? '').trim());
 }
 
 /**
  * 小数（必须含小数部分，支持负号）
- * @param {string|number} value
- * @param {number} [places] 最多小数位数；不传则不限位数。如 decimalRule(2) 允许 12.3、12.34
- * @returns {boolean}
+ * @param places 最多小数位数；不传则不限位数。如 isDecimal(v, 2) 允许 12.3、12.34
  */
-export function isDecimal(value, places) {
+export function isDecimal(value: unknown, places?: number): boolean {
   const str = String(value ?? '').trim();
   if (places === undefined) {
     return /^-?\d+\.\d+$/.test(str);
@@ -119,57 +113,45 @@ export function isDecimal(value, places) {
 
 /**
  * 金额：非负数字，整数或最多两位小数，首位非 0（0 除外），如 0、12、12.5、12.34
- * @param {string|number} value
- * @returns {boolean}
  */
-export function isAmount(value) {
+export function isAmount(value: unknown): boolean {
   return /^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(String(value ?? '').trim());
 }
 
 /**
  * 最小长度校验（字符数，一个中文按 1 个字符计）
- * @param {string} value
- * @param {number} len 最小字符数
- * @returns {boolean}
+ * @param len 最小字符数
  */
-export function minLength(value, len) {
+export function minLength(value: unknown, len: number): boolean {
   return String(value ?? '').trim().length >= Number(len);
 }
 
 /**
  * 最大长度校验（字符数，一个中文按 1 个字符计）
- * @param {string} value
- * @param {number} len 最大字符数
- * @returns {boolean}
+ * @param len 最大字符数
  */
-export function maxLength(value, len) {
+export function maxLength(value: unknown, len: number): boolean {
   return String(value ?? '').trim().length <= Number(len);
 }
 
 /**
  * 邮箱
- * @param {string} value
- * @returns {boolean}
  */
-export function isEmail(value) {
+export function isEmail(value: unknown): boolean {
   return /^[\w.-]+@[\w-]+(\.[\w-]+)+$/.test(String(value ?? '').trim());
 }
 
 /**
  * 邮政编码：6 位数字
- * @param {string} value
- * @returns {boolean}
  */
-export function isPostalCode(value) {
+export function isPostalCode(value: unknown): boolean {
   return /^\d{6}$/.test(String(value ?? '').trim());
 }
 
 /**
  * 车牌号：普通车牌 + 新能源 8 位车牌（不含教练车/港澳等特殊前缀的极端情况）
- * @param {string} value
- * @returns {boolean}
  */
-export function isCarNo(value) {
+export function isCarNo(value: unknown): boolean {
   const str = String(value ?? '').trim().toUpperCase();
   const provinces =
     '京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领';
@@ -185,19 +167,15 @@ export function isCarNo(value) {
 
 /**
  * 微信号：6-20 位，字母开头，可含字母、数字、下划线、减号
- * @param {string} value
- * @returns {boolean}
  */
-export function isWeChat(value) {
+export function isWeChat(value: unknown): boolean {
   return /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/.test(String(value ?? '').trim());
 }
 
 /**
  * QQ 号：5-11 位数字，首位非 0
- * @param {string} value
- * @returns {boolean}
  */
-export function isQQ(value) {
+export function isQQ(value: unknown): boolean {
   return /^[1-9]\d{4,10}$/.test(String(value ?? '').trim());
 }
 
@@ -205,11 +183,10 @@ export function isQQ(value) {
 
 /**
  * 将断言函数包装为 uview-plus（async-validator）的 validator
- * @param {(value: any) => boolean} validateFn 断言函数
- * @param {string} message 校验失败时的提示文案
- * @returns {(rule: any, value: any, callback: (error?: Error) => void) => void}
+ * @param validateFn 断言函数
+ * @param message 校验失败时的提示文案
  */
-export function makeValidator(validateFn, message) {
+export function makeValidator(validateFn: AssertFn, message: string): UpValidator {
   return (rule, value, callback) => {
     if (validateFn(value)) {
       callback();
@@ -255,28 +232,28 @@ export const validators = {
 
 /**
  * 最小长度规则
- * @param {number} len 最小字符数
- * @param {string} [message] 自定义提示文案
+ * @param len 最小字符数
+ * @param message 自定义提示文案
  */
-export function minLenRule(len, message) {
+export function minLenRule(len: number, message?: string): UpValidator {
   return makeValidator((v) => minLength(v, len), message ?? `不能少于 ${len} 个字符`);
 }
 
 /**
  * 最大长度规则
- * @param {number} len 最大字符数
- * @param {string} [message] 自定义提示文案
+ * @param len 最大字符数
+ * @param message 自定义提示文案
  */
-export function maxLenRule(len, message) {
+export function maxLenRule(len: number, message?: string): UpValidator {
   return makeValidator((v) => maxLength(v, len), message ?? `不能超过 ${len} 个字符`);
 }
 
 /**
  * 小数位数规则（最多 places 位小数）
- * @param {number} places 最多小数位数
- * @param {string} [message] 自定义提示文案
+ * @param places 最多小数位数
+ * @param message 自定义提示文案
  */
-export function decimalRule(places, message) {
+export function decimalRule(places: number, message?: string): UpValidator {
   return makeValidator(
     (v) => isDecimal(v, places),
     message ?? `请输入正确的小数（最多 ${places} 位小数）`
