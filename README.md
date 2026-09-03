@@ -98,7 +98,7 @@ const envConfigMap: Record<EnvType, EnvConfig> = {
 │   ├── static/                 # 静态资源（tabBar 图标等）
 │   ├── utils/
 │   │   ├── request.ts          # 请求封装（拦截器 + 统一错误处理）
-│   │   ├── validate.js         # 表单验证规则库（+ validate.d.ts）
+│   │   ├── validate.js         # 表单验证规则库
 │   │   ├── storage.ts          # 本地存储封装（typed + Key 统一管理）
 │   │   ├── router.ts           # 跳转封装（需登录页面拦截）
 │   │   ├── wechat.ts           # 微信能力（支付/订阅消息）
@@ -312,7 +312,6 @@ uni.navigateTo({ url: "/subpkg-auth/pages/login/index" });
   ```
 
 - 类型检查：`pnpm type-check`（等价 `vue-tsc --noEmit`），提交前建议通过
-- 导入 JS 工具模块需配套同名 `.d.ts`（如 `validate.js` / `validate.d.ts`）
 
 ## 常见问题
 
